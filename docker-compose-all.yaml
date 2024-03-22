@@ -1,0 +1,41 @@
+# https://kb.mjdm.ru/%D1%83%D1%81%D1%82%D0%B0%D0%BD%D0%BE%D0%B2%D0%BA%D0%B0-majordomo-%D0%B2-docker/
+
+version: '3.8'
+
+services:
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    restart: unless-stopped
+    ports:
+      - 1883:1883
+    environment:
+      - TZ=Europe/Moscow
+      - MQTT_BROKER_URL=mqtt://mosquitto
+    volumes:
+      - mosquitto_config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    image: koenkk/zigbee2mqtt
+    restart: unless-stopped
+    volumes:
+      - zigbee2mqtt_data:/app/data
+      - /run/udev:/run/udev:ro
+    ports:
+      # Frontend port
+      - 3010:8080
+    environment:
+      - TZ=Europe/Moscow
+    devices:
+      # Make sure this matched your adapter location
+      - /dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0:/dev/ttyUSB0
+    depends_on:
+      - mosquitto
+
+volumes:
+  mosquitto_config:
+  mosquitto_data:
+  zigbee2mqtt_data:
